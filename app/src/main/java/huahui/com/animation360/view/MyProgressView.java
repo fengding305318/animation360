@@ -8,6 +8,8 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -29,6 +31,14 @@ public class MyProgressView extends View {
     private int progress = 50;
     private int max = 100;
     private GestureDetector detector;
+    private int currentProgress = 0;
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+
+        }
+    };
+
     public MyProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
@@ -75,6 +85,7 @@ public class MyProgressView extends View {
         @Override
         public boolean onDoubleTap(MotionEvent e) {
             Toast.makeText(getContext(), "双击啦", Toast.LENGTH_SHORT).show();
+            startDoubleTapAnimation();
             return super.onDoubleTap(e);
         }
 
@@ -84,6 +95,25 @@ public class MyProgressView extends View {
             return super.onSingleTapConfirmed(e);
         }
 
+    }
+
+    private void startDoubleTapAnimation() {
+        handler.postDelayed(doubleTapRunnable , 50);
+    }
+
+    private DuobleTapRunnable doubleTapRunnable = new DuobleTapRunnable();
+    class DuobleTapRunnable implements Runnable {
+        @Override
+        public void run() {
+            currentProgress++;
+            if (currentProgress <= progress) {
+                invalidate();
+                handler.postDelayed(doubleTapRunnable, 50);
+            } else {
+                handler.removeCallbacks(doubleTapRunnable);
+                currentProgress = 0;
+            }
+        }
     }
 
     @Override
@@ -96,19 +126,20 @@ public class MyProgressView extends View {
     protected void onDraw(Canvas canvas) {
         bitmapCanvas.drawCircle(width / 2, height / 2, width / 2, circlePaint);
         path.reset();
-        float y = (1 - (float) progress / max) * height;
+        float y = (1 - (float) currentProgress / max) * height;
         path.moveTo(width, y);
         path.lineTo(width, height);
         path.lineTo(0, height);
         path.lineTo(0, y);
+        float d = (1 - ((float) currentProgress / progress)) * 10;
         for (int i = 0; i < 5; i++) {
-            path.rQuadTo(10, -10, 20, 0);
-            path.rQuadTo(10, 10, 20, 0);
+            path.rQuadTo(10, -d, 20, 0);
+            path.rQuadTo(10, d, 20, 0);
         }
         path.close();
         bitmapCanvas.drawPath(path, progressPaint);
 
-        String text = (int) (((float) progress / max) * 100) + "%";
+        String text = (int) (((float) currentProgress / max) * 100) + "%";
         float textwidth = textPaint.measureText(text);
         Paint.FontMetrics metrics = textPaint.getFontMetrics();
         float baseLine = height / 2 - (metrics.ascent + metrics.descent) / 2;
