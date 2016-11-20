@@ -11,8 +11,8 @@
         android:layout_height="wrap_content"
         android:onClick="StartService"/>
 
-    <huahui.com.animation360.view.MyProgressView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    <!--<huahui.com.animation360.view.MyProgressView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content" />-->
 
 </RelativeLayout>
