@@ -32,6 +32,8 @@ public class MyProgressView extends View {
     private int max = 100;
     private GestureDetector detector;
     private int currentProgress = 0;
+    private int count = 50;
+    private boolean isSingleTap = false;
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -92,16 +94,40 @@ public class MyProgressView extends View {
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
             Toast.makeText(getContext(), "单击啦", Toast.LENGTH_SHORT).show();
+            isSingleTap = true;
+            currentProgress = progress;
+            startSingelTapAnimation();
             return super.onSingleTapConfirmed(e);
         }
 
+
     }
 
+    private void startSingelTapAnimation() {
+        handler.postDelayed(singleTapRunnable, 200);
+    }
+
+    private SingleTapRunnable singleTapRunnable = new SingleTapRunnable();
     private void startDoubleTapAnimation() {
         handler.postDelayed(doubleTapRunnable , 50);
     }
 
     private DuobleTapRunnable doubleTapRunnable = new DuobleTapRunnable();
+
+    class SingleTapRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            count--;
+            if (count >= 0) {
+                invalidate();
+                handler.postDelayed(singleTapRunnable, 200);
+            } else {
+                handler.removeCallbacks(singleTapRunnable);
+                count = 50;
+            }
+        }
+    }
     class DuobleTapRunnable implements Runnable {
         @Override
         public void run() {
@@ -131,10 +157,25 @@ public class MyProgressView extends View {
         path.lineTo(width, height);
         path.lineTo(0, height);
         path.lineTo(0, y);
-        float d = (1 - ((float) currentProgress / progress)) * 10;
-        for (int i = 0; i < 5; i++) {
-            path.rQuadTo(10, -d, 20, 0);
-            path.rQuadTo(10, d, 20, 0);
+        if (!isSingleTap) {
+            float d = (1 - ((float) currentProgress / progress)) * 10;//振幅
+            for (int i = 0; i < 5; i++) {
+                path.rQuadTo(10, -d, 20, 0);
+                path.rQuadTo(10, d, 20, 0);
+            }
+        } else {
+            float d = (float) count / 50 * 10;
+            if (count % 2 == 0) {
+                for (int i = 0; i < 5; i++) {
+                    path.rQuadTo(20, -d, 40, 0);
+                    path.rQuadTo(20, d, 40, 0);
+                }
+            } else {
+                for (int i = 0; i < 5; i++) {
+                    path.rQuadTo(20, d, 40, 0);
+                    path.rQuadTo(20, -d, 40, 0);
+                }
+            }
         }
         path.close();
         bitmapCanvas.drawPath(path, progressPaint);
